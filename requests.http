@@ -1,0 +1,103 @@
+### TaskHub requests - works with IntelliJ HTTP client and the VS Code "REST Client" extension.
+### Run the login first; the token is captured for the rest (IntelliJ syntax shown, in VS Code copy the token manually).
+
+@host = http://localhost:8080
+
+### Health
+GET {{host}}/actuator/health
+
+### Register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "carol", "email": "carol@example.com", "password": "Password1" }
+
+### Login as alice (seeded)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "username": "alice", "password": "Password1" }
+
+> {% client.global.set("token", response.body.token); %}
+
+### Who am I
+GET {{host}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### My projects (paged, sorted)
+GET {{host}}/api/projects?page=0&size=5&sort=name,asc
+Authorization: Bearer {{token}}
+
+### Project 1 stats (cached; evicted on task changes)
+GET {{host}}/api/projects/1/stats
+Authorization: Bearer {{token}}
+
+### Create a project
+POST {{host}}/api/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Mobile App", "description": "v2 rewrite" }
+
+### Add bob (id 3) as a member of project 1 (already one in the seed - idempotent)
+PUT {{host}}/api/projects/1/members/3
+Authorization: Bearer {{token}}
+
+### Create a task (validation: try an empty title or a past due date)
+POST {{host}}/api/projects/1/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "title": "Add dark mode", "priority": "HIGH", "assigneeId": 3, "tags": ["frontend", "ui"] }
+
+### Search tasks: filter + page + sort
+GET {{host}}/api/projects/1/tasks?status=IN_PROGRESS&tag=frontend&sort=dueDate,asc
+Authorization: Bearer {{token}}
+
+### Overdue tasks
+GET {{host}}/api/projects/1/tasks?overdue=true
+Authorization: Bearer {{token}}
+
+### Text search
+GET {{host}}/api/projects/1/tasks?q=form
+Authorization: Bearer {{token}}
+
+### Status change (TODO -> DONE is rejected with 422; TODO -> IN_PROGRESS is fine)
+PATCH {{host}}/api/tasks/2/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "DONE" }
+
+### Update with optimistic concurrency (send a stale version to get 409)
+PUT {{host}}/api/tasks/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "title": "Design new landing page v2", "priority": "CRITICAL", "tags": ["design"], "version": 0 }
+
+### Assign / unassign
+PUT {{host}}/api/tasks/1/assignee
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "assigneeId": null }
+
+### Comments
+POST {{host}}/api/tasks/1/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "body": "Looks great, shipping this week." }
+
+###
+GET {{host}}/api/tasks/1/comments
+Authorization: Bearer {{token}}
+
+### Admin-only (alice gets 403; log in as admin to see it work)
+GET {{host}}/api/admin/activity
+Authorization: Bearer {{token}}
+
+### Admin: list users
+GET {{host}}/api/admin/users
+Authorization: Bearer {{token}}

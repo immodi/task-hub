@@ -1,0 +1,49 @@
+server:
+  port: ${PORT:9090}
+
+spring:
+  application:
+    name: taskhub
+  threads:
+    virtual:
+      enabled: true            # Tomcat + @Async run on virtual threads
+  datasource:
+    url: jdbc:h2:mem:taskhub;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop    # like EF EnsureCreated, schema comes from entities
+    open-in-view: false        # no lazy loading in controllers - map to DTOs inside @Transactional services
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50   # cheap N+1 mitigation
+        format_sql: true
+    show-sql: false
+
+taskhub:
+  security:
+    jwt-secret: ${TASKHUB_JWT_SECRET:dev-only-secret-change-me-please-it-must-be-32-bytes-or-more}
+    token-ttl: PT2H
+  overdue-scan-interval: PT1M
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}]"
+  level:
+    com.example.taskhub: DEBUG
+    # org.hibernate.SQL: DEBUG   # uncomment to watch generated SQL (like EF's LogTo)
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true     # keeps your token across page reloads
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
