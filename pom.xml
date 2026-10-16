@@ -17,7 +17,22 @@
   <artifactId>taskhub</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>taskhub</name>
-  <description>TaskHub - Spring Boot practice API</description>
+  <description>TaskHub - task and project management REST API on Spring Boot</description>
+  <url>https://github.com/immodi/task-hub</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/immodi/task-hub.git</connection>
+    <developerConnection>scm:git:ssh://github.com/immodi/task-hub.git</developerConnection>
+    <url>https://github.com/immodi/task-hub</url>
+  </scm>
 
   <properties>
     <java.version>27</java.version>
@@ -34,6 +49,13 @@
     <!-- Swagger UI + OpenAPI spec. springdoc 3.x is the line for Spring Boot 4. -->
     <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>3.0.3</version></dependency>
     <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>runtime</scope></dependency>
+
+    <!-- IDE hints and metadata for @ConfigurationProperties (SecurityProperties). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
   </dependencies>

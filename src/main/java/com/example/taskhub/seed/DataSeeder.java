@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.taskhub.domain.ActivityLog;
 import com.example.taskhub.domain.Comment;
 import com.example.taskhub.domain.Priority;
 import com.example.taskhub.domain.Project;
@@ -21,6 +22,7 @@ import com.example.taskhub.domain.Tag;
 import com.example.taskhub.domain.Task;
 import com.example.taskhub.domain.TaskStatus;
 import com.example.taskhub.domain.User;
+import com.example.taskhub.repository.ActivityLogRepository;
 import com.example.taskhub.repository.CommentRepository;
 import com.example.taskhub.repository.ProjectRepository;
 import com.example.taskhub.repository.TagRepository;
@@ -39,15 +41,17 @@ public class DataSeeder implements CommandLineRunner {
     private final TaskRepository tasks;
     private final TagRepository tags;
     private final CommentRepository comments;
+    private final ActivityLogRepository activity;
     private final PasswordEncoder encoder;
 
     public DataSeeder(UserRepository users, ProjectRepository projects, TaskRepository tasks, TagRepository tags,
-                      CommentRepository comments, PasswordEncoder encoder) {
+                      CommentRepository comments, ActivityLogRepository activity, PasswordEncoder encoder) {
         this.users = users;
         this.projects = projects;
         this.tasks = tasks;
         this.tags = tags;
         this.comments = comments;
+        this.activity = activity;
         this.encoder = encoder;
     }
 
@@ -89,7 +93,26 @@ public class DataSeeder implements CommandLineRunner {
         c.setBody("I have a first mockup ready for review.");
         comments.save(c);
 
+        // Seed a little history so /api/admin/activity is not empty on a fresh start.
+        // (In normal operation these rows are written asynchronously by ActivityLogListener.)
+        activity(alice.getId(), site.getId(), "PROJECT_CREATED", site.getId(),
+                "Created project '" + site.getName() + "'");
+        activity(alice.getId(), site.getId(), "TASK_CREATED", t1.getId(), "Created '" + t1.getTitle() + "'");
+        activity(alice.getId(), site.getId(), "TASK_STATUS_CHANGED", t1.getId(),
+                TaskStatus.TODO + " -> " + t1.getStatus());
+        activity(bob.getId(), site.getId(), "COMMENT_ADDED", t1.getId(), "Comment on '" + t1.getTitle() + "'");
+
         log.info("Seeded demo data. Users: admin, alice, bob (password: Password1)");
+    }
+
+    private void activity(Long actorId, Long projectId, String action, Long entityId, String details) {
+        ActivityLog a = new ActivityLog();
+        a.setProjectId(projectId);
+        a.setActorId(actorId);
+        a.setAction(action);
+        a.setEntityId(entityId);
+        a.setDetails(details);
+        activity.save(a);
     }
 
     private User user(String name, String email, Role role) {

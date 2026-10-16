@@ -27,11 +27,34 @@ taskhub:
     token-ttl: PT2H
   overdue-scan-interval: PT1M
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true     # keeps your token across page reloads
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics,caches
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: TaskHub
+    description: Task and project management REST API
+    version: "@project.version@"
+    java: "@java.version@"
 
 logging:
   pattern:
@@ -39,11 +62,3 @@ logging:
   level:
     com.example.taskhub: DEBUG
     # org.hibernate.SQL: DEBUG   # uncomment to watch generated SQL (like EF's LogTo)
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    persist-authorization: true     # keeps your token across page reloads
-    operations-sorter: method
-    tags-sorter: alpha
-    display-request-duration: true

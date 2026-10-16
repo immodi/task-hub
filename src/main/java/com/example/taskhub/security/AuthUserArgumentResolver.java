@@ -26,6 +26,9 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
         if (auth instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
             Number uid = jwt.getClaim("uid");
+            if (uid == null) {
+                throw ApiException.unauthorized("Token is missing the user id claim");
+            }
             boolean admin = jwtAuth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
             return new AuthUser(uid.longValue(), jwt.getSubject(), admin);
         }

@@ -1,18 +1,27 @@
-### TaskHub requests - works with IntelliJ HTTP client and the VS Code "REST Client" extension.
-### Run the login first; the token is captured for the rest (IntelliJ syntax shown, in VS Code copy the token manually).
+### TaskHub requests
+### Works with the IntelliJ HTTP client and the VS Code "REST Client" extension.
+### Start the app first (mvn spring-boot:run -> http://localhost:9090).
+### Run "Login as alice" once; IntelliJ captures the token into {{token}} for the rest.
+### (In VS Code, copy the token from the login response manually.)
 
-@host = http://localhost:8080
+@host = http://localhost:9090
 
-### Health
+### Health (public)
 GET {{host}}/actuator/health
 
-### Register
+### Build info (public)
+GET {{host}}/actuator/info
+
+### OpenAPI document (public)
+GET {{host}}/v3/api-docs
+
+### Register (public)
 POST {{host}}/api/auth/register
 Content-Type: application/json
 
 { "username": "carol", "email": "carol@example.com", "password": "Password1" }
 
-### Login as alice (seeded)
+### Login as alice (seeded). Captures the token for the requests below.
 POST {{host}}/api/auth/login
 Content-Type: application/json
 
@@ -28,7 +37,7 @@ Authorization: Bearer {{token}}
 GET {{host}}/api/projects?page=0&size=5&sort=name,asc
 Authorization: Bearer {{token}}
 
-### Project 1 stats (cached; evicted on task changes)
+### Project 1 stats (cached; evicted after task changes commit)
 GET {{host}}/api/projects/1/stats
 Authorization: Bearer {{token}}
 
@@ -39,11 +48,19 @@ Content-Type: application/json
 
 { "name": "Mobile App", "description": "v2 rewrite" }
 
-### Add bob (id 3) as a member of project 1 (already one in the seed - idempotent)
+### Add bob (id 3) as a member of project 1 (idempotent)
 PUT {{host}}/api/projects/1/members/3
 Authorization: Bearer {{token}}
 
-### Create a task (validation: try an empty title or a past due date)
+### Archive / unarchive a project (archived projects reject new tasks)
+POST {{host}}/api/projects/1/archive
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/api/projects/1/unarchive
+Authorization: Bearer {{token}}
+
+### Create a task (try an empty title or a past due date for a 400)
 POST {{host}}/api/projects/1/tasks
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -60,6 +77,10 @@ Authorization: Bearer {{token}}
 
 ### Text search
 GET {{host}}/api/projects/1/tasks?q=form
+Authorization: Bearer {{token}}
+
+### Unknown sort field -> 400 (not a 500)
+GET {{host}}/api/projects/1/tasks?sort=nope
 Authorization: Bearer {{token}}
 
 ### Status change (TODO -> DONE is rejected with 422; TODO -> IN_PROGRESS is fine)

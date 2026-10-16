@@ -1,5 +1,7 @@
 package com.example.taskhub.service;
 
+import java.util.Set;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ import com.example.taskhub.security.AuthUser;
 @Service
 @Transactional
 public class CommentService {
+
+    private static final Set<String> SORTABLE = Set.of("id", "createdAt");
 
     private final CommentRepository comments;
     private final UserRepository users;
@@ -48,6 +52,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public PageResponse<CommentDto> list(Long taskId, Pageable pageable, AuthUser actor) {
         access.requireTask(taskId, actor);
+        Sorting.validate(pageable, SORTABLE);
         return PageResponse.from(comments.findByTaskId(taskId, pageable).map(Mappers::commentDto));
     }
 

@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -28,7 +29,7 @@ import com.jayway.jsonpath.JsonPath;
 abstract class AbstractApiTest {
 
     /** Status + raw body of a response, with a tiny JsonPath helper. */
-    record Resp(int status, String body) {
+    record Resp(int status, String body, String contentType) {
         <T> T json(String path) {
             return JsonPath.read(body, path);
         }
@@ -82,7 +83,7 @@ abstract class AbstractApiTest {
             } catch (IOException ignored) {
                 // empty body
             }
-            return new Resp(res.getStatusCode().value(), body);
+            return new Resp(res.getStatusCode().value(), body, res.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE));
         });
     }
 

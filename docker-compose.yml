@@ -1,0 +1,9 @@
+services:
+  taskhub:
+    build: .
+    image: taskhub:latest
+    ports:
+      - "9090:9090"
+    environment:
+      # Override for anything real. HS256 needs at least 32 bytes.
+      TASKHUB_JWT_SECRET: "local-compose-secret-change-me-please-32-bytes-min"

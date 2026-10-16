@@ -37,6 +37,10 @@ import com.example.taskhub.security.AuthUser;
 @Transactional
 public class TaskService {
 
+    /** Sortable properties for task search; anything else is rejected with a 400. */
+    private static final Set<String> SORTABLE = Set.of(
+            "id", "title", "status", "priority", "dueDate", "createdAt", "updatedAt", "assignee.username");
+
     private final TaskRepository tasks;
     private final ProjectRepository projects;
     private final UserRepository users;
@@ -79,6 +83,7 @@ public class TaskService {
     @Transactional(readOnly = true)
     public PageResponse<TaskDto> search(Long projectId, TaskFilter filter, Pageable pageable, AuthUser actor) {
         access.requireProjectAccess(projectId, actor);
+        Sorting.validate(pageable, SORTABLE);
         Page<Task> page = tasks.findAll(TaskSpecifications.matching(projectId, filter), pageable);
         return PageResponse.from(page.map(Mappers::taskDto));
     }

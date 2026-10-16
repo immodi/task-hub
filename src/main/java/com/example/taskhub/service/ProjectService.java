@@ -1,5 +1,7 @@
 package com.example.taskhub.service;
 
+import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import com.example.taskhub.security.AuthUser;
 @Service
 @Transactional
 public class ProjectService {
+
+    private static final Set<String> SORTABLE = Set.of("id", "name", "createdAt", "updatedAt");
 
     private final ProjectRepository projects;
     private final UserRepository users;
@@ -51,6 +55,7 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public PageResponse<ProjectDto> list(AuthUser actor, Pageable pageable) {
+        Sorting.validate(pageable, SORTABLE);
         Page<Project> page = actor.admin()
                 ? projects.findAll(pageable)
                 : projects.findAccessible(actor.id(), pageable);

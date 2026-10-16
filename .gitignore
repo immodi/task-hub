@@ -1,11 +1,7 @@
+# Build output
 target/
-.idea/
-*.iml
-.vscode/
 
 # Maven
-target/
-!.mvn/wrapper/maven-wrapper.jar
 .mvn/timing.properties
 dependency-reduced-pom.xml
 pom.xml.tag
