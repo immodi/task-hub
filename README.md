@@ -7,13 +7,13 @@ workflow, comments, and an asynchronous activity log.
 ![Java](https://img.shields.io/badge/Java-27-orange?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-6DB33F?logo=springboot&logoColor=white)
 ![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1-6BA539)
-![Tests](https://img.shields.io/badge/tests-84%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Built with **Spring Boot 4** and **Java 27**: Spring Data JPA, Spring Security with self-issued
 HS256 JWTs, an in-memory H2 database, springdoc-openapi, Actuator, and JUnit 5. It was written as a
 hands-on bridge from .NET / ASP.NET Core, so the code and this README point out the equivalents
-along the way (see the [cheat sheet](#net--spring-cheat-sheet) at the bottom).
+along the way.
 
 ## Quick start
 
@@ -86,7 +86,8 @@ The full, generated spec is checked in at [`docs/openapi.json`](docs/openapi.jso
 - **Concurrency** — updates accept a `version`; a stale one returns `409`.
 - **Errors** — RFC 9457 `application/problem+json`, with a per-field validation message map.
 - **Events** — a sealed event hierarchy handled by an exhaustive `switch`.
-- **Background work** — an async activity log written after commit, plus a scheduled overdue scan.
+- **Background work** — an async activity log written after commit, plus a scheduled scan that
+  publishes an overdue-task gauge at `/actuator/metrics/taskhub.overdue.tasks`.
 - **Caching** — project stats are cached and evicted after task changes commit.
 - **Ops** — request-id logging (MDC + `X-Request-Id`), virtual threads, Actuator, OpenAPI 3.1.
 
@@ -112,7 +113,7 @@ A few decisions worth calling out, because they are the interesting parts:
 mvn test
 ```
 
-84 tests, three flavours:
+85 tests, three flavours:
 
 | Kind | Location | Covers |
 |---|---|---|
@@ -132,7 +133,7 @@ CI runs `mvn verify` on every push and pull request (see `.github/workflows/ci.y
 | `PORT` | `9090` | HTTP port. |
 | `TASKHUB_JWT_SECRET` | a dev-only placeholder | HS256 signing key; use 32+ bytes. |
 | `taskhub.security.token-ttl` | `PT2H` | Token lifetime. |
-| `taskhub.overdue-scan-interval` | `PT1M` | Interval of the scheduled overdue scan. |
+| `taskhub.overdue-scan-interval` | `PT1M` | How often the overdue scan refreshes the `taskhub.overdue.tasks` gauge. |
 
 ## Project layout
 
@@ -155,25 +156,6 @@ Regenerate the checked-in spec while the app is running:
 ```bash
 curl -s http://localhost:9090/v3/api-docs | jq . > docs/openapi.json
 ```
-
-## .NET → Spring cheat sheet
-
-| .NET | Spring |
-|---|---|
-| `Program.cs`, `AddX()` | `@SpringBootApplication`, `@Configuration`, `@Bean` |
-| Constructor DI | Constructor injection, `@Service` / `@Component` |
-| `[ApiController]`, `[HttpGet]` | `@RestController`, `@GetMapping` |
-| `[FromBody]`, `[FromQuery]` | `@RequestBody`, `@RequestParam` / `@ModelAttribute` |
-| DataAnnotations | Jakarta Bean Validation |
-| EF Core `DbContext` | Spring Data repositories + JPA |
-| `[Timestamp]` | `@Version` |
-| `IOptions<T>` | `@ConfigurationProperties` |
-| Middleware | `Filter` |
-| ProblemDetails | `@RestControllerAdvice` + `ProblemDetail` |
-| `BackgroundService` | `@Scheduled`, `@Async` |
-| MediatR notifications | `ApplicationEventPublisher` + `@TransactionalEventListener` |
-| `IMemoryCache` | `@Cacheable` |
-| xUnit + `WebApplicationFactory` | JUnit 5 + `@SpringBootTest` |
 
 ## Ideas / next steps
 
